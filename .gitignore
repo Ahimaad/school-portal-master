@@ -1,42 +1,16 @@
-# الملفات المحلية والنظام
+# Firebase & Cloudinary secrets
+.firebase/
+*.secret
+.env
+
+# System files
 .DS_Store
 Thumbs.db
-desktop.ini
-*.swp
-*.swo
-*~
 
-# محررات الكود
+# IDE files
 .vscode/
 .idea/
-*.sublime-*
+*.swp
 
-# بيئة التشغيل وnode
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# Firebase local cache
-.firebase/
-firebase-debug.log
-
-# ملفات سرية
-.env
-.env.local
-secrets.js
-config.js
-*.pem
-*.key
-
-# البناء المؤقت
-_site/
-dist/
-build/
-*.tmp
-
-# سجلات
+# Logs
 *.log
-logs/
-
-# أي ملف إعدادات شخصية
-*.local.*
