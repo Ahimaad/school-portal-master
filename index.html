@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a2b4e">
   <title>منصة سعد بن أبي وقاص | المتكاملة</title>
-  <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Bootstrap + Icons + Swiper -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -106,18 +104,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-  // ==================== CONFIG (Secrets will be injected by GitHub Actions) ====================
+  // ==================== FIREBASE CONFIG (DIRECT VALUES FOR TESTING) ====================
   const firebaseConfig = {
-    apiKey: "%%FIREBASE_API_KEY%%",
-    authDomain: "%%FIREBASE_AUTH_DOMAIN%%",
-    databaseURL: "%%FIREBASE_DATABASE_URL%%",
-    projectId: "%%FIREBASE_PROJECT_ID%%",
-    storageBucket: "%%FIREBASE_STORAGE_BUCKET%%",
-    messagingSenderId: "%%FIREBASE_MESSAGING_SENDER_ID%%",
-    appId: "%%FIREBASE_APP_ID%%"
+    apiKey: "AIzaSyC79JwFiDucsph3T8PTKntbk_VE1ANFTxg",
+    authDomain: "saad-school-portal.firebaseapp.com",
+    databaseURL: "https://saad-school-portal-default-rtdb.firebaseio.com",
+    projectId: "saad-school-portal",
+    storageBucket: "saad-school-portal.firebasestorage.app",
+    messagingSenderId: "1085838136773",
+    appId: "1:1085838136773:web:0d200edd01bd12fb0a27ac"
   };
-  const ADMIN_SECRET = "%%ADMIN_SECRET_KEY%%";
-  const CLOUD_NAME = "dyo4ff7ha";   // تم إدخال Cloud name الخاص بك
+  const ADMIN_SECRET = "YWRtaW4xMjM=";   // password: admin123
+  const CLOUD_NAME = "dyo4ff7ha";
   const UPLOAD_PRESET = "school_raw";
 
   firebase.initializeApp(firebaseConfig);
@@ -170,7 +168,7 @@
     });
   }
 
-  // ==================== POSTS (General Feed with likes/comments/share) ====================
+  // ==================== POSTS (General Feed) ====================
   async function renderPostCard(post, id) {
     let userId = localStorage.getItem("userId") || "user_" + Math.random();
     if (!localStorage.getItem("userId")) localStorage.setItem("userId", userId);
@@ -255,7 +253,7 @@
     if (grade) { let snap = await db.ref(`assignments/${assignId}/submissions`).once("value"); snap.forEach(s => { if (s.val().studentId === studentId) s.ref.update({ grade: parseInt(grade), feedback: "مقبول" }); }); toast("تم التقييم"); loadSubmissions(assignId); }
   };
 
-  // ==================== POLLS (VOTING) ====================
+  // ==================== POLLS ====================
   async function loadPolls() {
     let snap = await db.ref("polls").once("value");
     let polls = []; snap.forEach(p => polls.push({ id: p.key, ...p.val() }));
@@ -339,7 +337,7 @@
   window.shareWhatsApp = (name, total) => window.open(`https://wa.me/?text=${encodeURIComponent(`نتيجة الطالب ${name}: ${total} درجة`)}`);
   window.uploadResults = () => { if (!isAdmin) return; let file = document.getElementById("jsonFile").files[0]; if (!file) return; let reader = new FileReader(); reader.onload = e => { let data = JSON.parse(e.target.result); let updates = {}; for (let grade in data) for (let seat in data[grade]) updates[`results/${grade}/${seat}`] = data[grade][seat]; db.ref().update(updates).then(() => toast("تم رفع النتائج")); }; reader.readAsText(file); };
 
-  // ==================== EDUCATIONAL RESOURCES (per grade) ====================
+  // ==================== EDUCATIONAL RESOURCES ====================
   async function loadResources() {
     let grades = ["p3", "p4", "p5", "p6", "m1", "m2", "m3"];
     let gradeNames = { p3: "الثالث", p4: "الرابع", p5: "الخامس", p6: "السادس", m1: "الأول إعدادي", m2: "الثاني إعدادي", m3: "الثالث إعدادي" };
@@ -365,7 +363,7 @@
 
   window.addResourcePost = async (grade) => { if (!isAdmin) return; let content = prompt("محتوى المنشور:"); if (content) await db.ref(`educational_resources/${grade}/posts`).push({ content, publisherName: "معلم", timestamp: Date.now(), comments: {}, likes: {} }); loadGradePosts(grade); };
 
-  // ==================== ACTIVITIES ALIAS (assignments) ====================
+  // ==================== ACTIVITIES (alias) ====================
   async function loadActivitiesSection() { loadAssignments(); }
 
   // ==================== CREATE POST MODAL (ADMIN ONLY) ====================
@@ -376,7 +374,7 @@
     });
   };
 
-  // ==================== NAVIGATION / ADMIN ====================
+  // ==================== SECTION CONTROLLER & ADMIN ====================
   window.loadSection = async (section) => {
     currentSection = section;
     if (section === "home") loadMainPosts();
