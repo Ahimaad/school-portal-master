@@ -26,9 +26,10 @@
     .nav-btn { width:100%; background:none; border:none; text-align:right; padding:12px 15px; border-radius:16px; font-weight:700; transition:0.2s; border-right:4px solid var(--gold); margin-bottom:8px; }
     .nav-btn:hover, .nav-btn.active { background: var(--primary); color:white; transform: translateX(-5px); }
     .post-card { background: white; border-radius: 20px; padding:20px; margin-bottom:25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; }
-    .post-avatar img, .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: var(--gold); display: flex; align-items: center; justify-content: center; color: white; }
-    .media-wrapper { margin: 12px 0; border-radius: 16px; overflow: hidden; }
-    .media-wrapper img, .media-wrapper video, .media-wrapper iframe { width: 100%; max-height: 320px; object-fit: cover; border-radius: 12px; }
+    .post-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; color: white; overflow: hidden; }
+    .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .media-preview { margin: 12px 0; border-radius: 16px; overflow: hidden; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100px; }
+    .media-preview img, .media-preview video, .media-preview iframe { width: 100%; max-height: 280px; object-fit: cover; border-radius: 12px; }
     .btn-gold { background: linear-gradient(135deg, var(--gold), #b8860b); color: var(--primary); font-weight:800; border:none; padding:6px 18px; border-radius:40px; transition:0.2s; }
     .fab-th, .fab-st { position:fixed; bottom:30px; left:20px; background: var(--gold); color: var(--primary); border:none; width:48px; height:48px; border-radius:50%; z-index:900; cursor:pointer; }
     .fab-st { left:85px; background: var(--primary); color:white; opacity:0; }
@@ -113,21 +114,24 @@
   let currentSection = "home";
   let currentActivityId = null;
   let swiperHero = null;
+  // متغيرات لاستماع البيانات
+  let postsListener = null;
+  let activityPostsListener = null;
 
   // دوال مساعدة
   function toast(msg, type="info"){ let d=document.createElement("div"); d.className=`alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3 shadow`; d.innerText=msg; document.body.appendChild(d); setTimeout(()=>d.remove(),2500); }
   function formatDate(ts){ return new Date(ts).toLocaleString("ar-EG"); }
   function escapeHtml(s){ if(!s) return ""; return s.replace(/[&<>]/g, m=> m==='&'?'&amp;': m==='<'?'&lt;': '&gt;'); }
   function getYoutubeId(url){ let m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/); return m ? m[1] : null; }
-
-  function generateMediaHtml(url){
+  // توليد معاينة الوسائط داخل البطاقة
+  function getMediaPreview(url){
     if(!url) return "";
     let yt = getYoutubeId(url);
-    if(yt) return `<div class="media-wrapper"><iframe src="https://www.youtube.com/embed/${yt}" allowfullscreen></iframe></div>`;
-    if(url.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i)) return `<div class="media-wrapper"><img src="${url}" onclick="openImage('${url}')"></div>`;
-    if(url.match(/\.(mp4|mov|webm)(\?|$)/i)) return `<div class="media-wrapper"><video controls src="${url}"></video></div>`;
-    if(url.match(/\.pdf(\?|$)/i)) return `<div class="media-wrapper"><iframe src="https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true"></iframe></div>`;
-    return `<div class="media-wrapper"><a href="${url}" target="_blank" class="btn btn-outline-primary w-100">فتح الرابط</a></div>`;
+    if(yt) return `<div class="media-preview"><iframe src="https://www.youtube.com/embed/${yt}" allowfullscreen></iframe></div>`;
+    if(url.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i)) return `<div class="media-preview"><img src="${url}" onclick="openImage('${url}')"></div>`;
+    if(url.match(/\.(mp4|mov|webm)(\?|$)/i)) return `<div class="media-preview"><video controls src="${url}"></video></div>`;
+    if(url.match(/\.pdf(\?|$)/i)) return `<div class="media-preview"><iframe src="https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true"></iframe></div>`;
+    return `<div class="media-preview"><a href="${url}" target="_blank" class="btn btn-outline-primary w-100">فتح الرابط</a></div>`;
   }
 
   async function uploadFile(file){
@@ -155,7 +159,7 @@
   document.getElementById("statTeachers")?.addEventListener("click",()=>editStat("teachersCount"));
   document.getElementById("statActivities")?.addEventListener("click",()=>editStat("activitiesCount"));
 
-  // ==================== شريط الأخبار (إدارة كاملة للمدير) ====================
+  // ==================== شريط الأخبار ====================
   function loadTicker(){
     db.ref("ticker_news").orderByChild("timestamp").once("value", snap=>{
       let arr = []; snap.forEach(c=>arr.unshift(c.val().text));
@@ -165,29 +169,30 @@
       repeated.forEach(t=>{ let span=document.createElement("span"); span.className="ticker-item"; span.innerHTML=`<i class="fas fa-star-of-life"></i> ${t}`; track.appendChild(span); });
     });
   }
-  async function addTickerItem(){
+  window.addTickerItem = async () => {
     if(!isAdmin) return;
     let { value } = await Swal.fire({ title: "إضافة خبر جديد", input: "text", inputPlaceholder: "نص الخبر", showCancelButton: true });
     if(value) await db.ref("ticker_news").push({ text: value, timestamp: Date.now() }).then(()=>loadTicker());
-  }
-  async function deleteTickerItem(key){
+  };
+  window.deleteTickerItem = async (key) => {
     if(!isAdmin) return;
     await db.ref(`ticker_news/${key}`).remove();
     loadTicker();
-  }
-  // زر إدارة التيكر يظهر في واجهة المدير
+  };
   function renderTickerAdmin(){
     if(!isAdmin) return "";
     return `<div class="mt-2 d-flex gap-2"><button class="btn btn-sm btn-gold" onclick="addTickerItem()"><i class="fas fa-plus"></i> إضافة خبر</button></div>`;
   }
 
-  // ==================== السلايدر (من الصور المرفوعة في الأنشطة) ====================
+  // ==================== السلايدر ====================
   async function loadHeroSlider(){
     let images = [];
     let acts = await db.ref("activities_list").once("value");
-    for(let act of acts.val() ? Object.values(acts.val()) : []){
-      let posts = await db.ref(`activities/${act.id}/posts`).limitToFirst(5).once("value");
-      posts.forEach(p=>{ if(p.val().mediaUrl && p.val().mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)/i)) images.push(p.val().mediaUrl); });
+    if(acts.val()){
+      for(let id in acts.val()){
+        let posts = await db.ref(`activities/${id}/posts`).limitToFirst(5).once("value");
+        posts.forEach(p=>{ if(p.val().mediaUrl && p.val().mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)/i)) images.push(p.val().mediaUrl); });
+      }
     }
     if(images.length===0) images = ["https://picsum.photos/id/20/800/300","https://picsum.photos/id/100/800/300","https://picsum.photos/id/180/800/300"];
     let slidesHtml = images.map(img=>`<div class="swiper-slide"><img src="${img}" style="height:200px; object-fit:cover; width:100%; border-radius:20px"></div>`).join("");
@@ -196,66 +201,72 @@
     swiperHero = new Swiper(".mainSlider", { loop: true, autoplay: { delay: 4000 }, pagination: { el: ".swiper-pagination" }, navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" } });
   }
 
-  // ==================== عرض المنشورات (عامة أو داخل النشاط) ====================
-  async function renderPostCard(post, postId, showPublisher=true, isActivity=false){
+  // ==================== عرض المنشورات (عامة) ====================
+  function renderPostCard(post, postId, showPublisher=false, activityId=null){
     let userId = localStorage.getItem("userId") || "u"+Math.random(); if(!localStorage.getItem("userId")) localStorage.setItem("userId",userId);
     let liked = post.likes && post.likes[userId];
     let likesCount = post.likes ? Object.keys(post.likes).length : 0;
     let commentsHtml = "";
     if(post.comments){
       Object.values(post.comments).forEach(c=>{
-        commentsHtml += `<div class="border-bottom pb-1 mb-1"><strong>${escapeHtml(c.author)}</strong> <small class="text-muted">${c.date||""}</small><p class="mb-0">${escapeHtml(c.text)}</p>${isAdmin ? `<button class="btn btn-sm btn-link text-danger p-0 float-start" onclick="deleteComment('${postId}','${c.id}')"><i class="fas fa-trash-alt"></i></button>` : ""}</div>`;
+        commentsHtml += `<div class="border-bottom pb-1 mb-1"><strong>${escapeHtml(c.author)}</strong> <small class="text-muted">${c.date||""}</small><p class="mb-0">${escapeHtml(c.text)}</p>${isAdmin ? `<button class="btn btn-sm btn-link text-danger p-0 float-start" onclick="deleteComment('${postId}','${c.id}',${!!activityId},'${activityId||""}')"><i class="fas fa-trash-alt"></i></button>` : ""}</div>`;
       });
     }
     let publisherHtml = "";
-    if(showPublisher){
-      publisherHtml = `<div class="d-flex gap-3"><div class="post-avatar">${post.publisherAvatar ? `<img src="${post.publisherAvatar}">` : `<i class="fas fa-user-tie"></i>`}</div><div><div class="fw-bold">${escapeHtml(post.publisherName||"إدارة المدرسة")}</div><div class="small text-muted">${post.publisherRole || ""}</div><div class="small text-muted">${formatDate(post.timestamp)}</div></div>${isAdmin ? `<button class="btn btn-sm btn-link text-danger ms-auto" onclick="deletePost('${postId}', ${isActivity}, '${currentActivityId||''}')"><i class="fas fa-trash-alt"></i></button>` : ""}</div>`;
+    if(showPublisher && post.publisherName){
+      publisherHtml = `<div class="d-flex gap-3 mb-2"><div class="post-avatar">${post.publisherAvatar ? `<img src="${post.publisherAvatar}">` : `<i class="fas fa-user-tie"></i>`}</div><div><div class="fw-bold">${escapeHtml(post.publisherName)}</div><div class="small text-muted">${escapeHtml(post.publisherRole || "")}</div><div class="small text-muted">${formatDate(post.timestamp)}</div></div>${isAdmin ? `<button class="btn btn-sm btn-link text-danger ms-auto" onclick="deletePost('${postId}', ${!!activityId}, '${activityId||""}')"><i class="fas fa-trash-alt"></i></button>` : ""}</div>`;
     } else {
-      publisherHtml = `<div class="d-flex justify-content-between"><div><div class="fw-bold">${escapeHtml(post.author||"إدارة المدرسة")}</div><div class="small text-muted">${formatDate(post.timestamp)}</div></div>${isAdmin ? `<button class="btn btn-sm btn-link text-danger" onclick="deletePost('${postId}', false, '')"><i class="fas fa-trash-alt"></i></button>` : ""}</div>`;
+      publisherHtml = `<div class="d-flex justify-content-between mb-2"><div><div class="fw-bold">${escapeHtml(post.author||"إدارة المدرسة")}</div><div class="small text-muted">${formatDate(post.timestamp)}</div></div>${isAdmin ? `<button class="btn btn-sm btn-link text-danger" onclick="deletePost('${postId}', false, '')"><i class="fas fa-trash-alt"></i></button>` : ""}</div>`;
     }
     return `<div class="post-card" data-id="${postId}">
-      <div class="mb-2">${publisherHtml}</div>
+      ${publisherHtml}
       <div class="post-content">${escapeHtml(post.content)}</div>
-      ${post.mediaUrl ? generateMediaHtml(post.mediaUrl) : ""}
+      ${post.mediaUrl ? getMediaPreview(post.mediaUrl) : ""}
       <div class="d-flex gap-3 mt-2 small text-muted"><span><i class="fas fa-thumbs-up"></i> ${likesCount}</span><span><i class="fas fa-comment"></i> ${post.comments ? Object.keys(post.comments).length : 0}</span></div>
       <div class="d-flex gap-2 mt-2">
-        <button class="btn btn-sm ${liked ? 'btn-primary' : 'btn-outline-secondary'} likeBtn" data-id="${postId}" data-activity="${isActivity}" data-actid="${currentActivityId||''}"><i class="fas fa-thumbs-up"></i> أعجبني</button>
+        <button class="btn btn-sm ${liked ? 'btn-primary' : 'btn-outline-secondary'} likeBtn" data-id="${postId}" data-activity="${!!activityId}" data-actid="${activityId||""}"><i class="fas fa-thumbs-up"></i> أعجبني</button>
         <button class="btn btn-sm btn-outline-secondary commentToggle" data-id="${postId}"><i class="fas fa-comment"></i> تعليق</button>
         <button class="btn btn-sm btn-outline-success shareWA" data-content="${escapeHtml(post.content)}"><i class="fab fa-whatsapp"></i> مشاركة</button>
       </div>
       <div id="comments-${postId}" class="mt-2" style="display:none">
         <div>${commentsHtml}</div>
-        <div class="input-group mt-2"><input type="text" class="form-control form-control-sm newComment" data-id="${postId}" placeholder="اكتب تعليقاً..."><button class="btn btn-sm btn-gold submitComment" data-id="${postId}" data-activity="${isActivity}" data-actid="${currentActivityId||''}">نشر</button></div>
+        <div class="input-group mt-2"><input type="text" class="form-control form-control-sm newComment" data-id="${postId}" placeholder="اكتب تعليقاً..."><button class="btn btn-sm btn-gold submitComment" data-id="${postId}" data-activity="${!!activityId}" data-actid="${activityId||""}">نشر</button></div>
       </div>
     </div>`;
   }
 
-  // المنشورات العامة
-  async function loadGeneralPosts(){
-    let container = document.getElementById("dynamicContent");
+  // تحميل المنشورات العامة
+  function loadGeneralPosts(){
+    const container = document.getElementById("dynamicContent");
     container.innerHTML = `<div class="text-center"><i class="fas fa-spinner fa-spin"></i></div>`;
-    let snap = await db.ref("posts").orderByChild("timestamp").once("value");
-    let posts = []; snap.forEach(p=>posts.push({ id:p.key, ...p.val() }));
-    posts.sort((a,b)=>b.timestamp - a.timestamp);
-    let html = `<div class="d-flex justify-content-between"><h4><i class="fas fa-newspaper text-warning"></i> المنشورات العامة</h4>${isAdmin ? `<button class="btn btn-gold btn-sm" onclick="showCreatePostModal('general')">+ منشور جديد</button>` : ""}</div>`;
-    for(let p of posts) html += await renderPostCard(p, p.id, false);
-    container.innerHTML = html;
-    attachPostEvents(false);
+    if(postsListener) postsListener.off();
+    postsListener = db.ref("posts").orderByChild("timestamp").on("value", async (snap) => {
+      let posts = [];
+      snap.forEach(p=>posts.push({ id:p.key, ...p.val() }));
+      posts.sort((a,b)=>b.timestamp - a.timestamp);
+      let html = `<div class="d-flex justify-content-between"><h4><i class="fas fa-newspaper text-warning"></i> المنشورات العامة</h4>${isAdmin ? `<button class="btn btn-gold btn-sm" onclick="showCreatePostModal('general')">+ منشور جديد</button>` : ""}</div>`;
+      for(let p of posts) html += renderPostCard(p, p.id, false);
+      container.innerHTML = html;
+      attachPostEvents(false);
+    });
   }
 
-  // منشورات النشاط
-  async function loadActivityPosts(actId){
-    let container = document.getElementById("activityPostsContainer");
+  // تحميل منشورات النشاط المحدد
+  function loadActivityPosts(actId){
+    const container = document.getElementById("activityPostsContainer");
     if(!container) return;
     container.innerHTML = `<div class="text-center"><i class="fas fa-spinner fa-spin"></i></div>`;
-    let snap = await db.ref(`activities/${actId}/posts`).orderByChild("timestamp").once("value");
-    let posts = []; snap.forEach(p=>posts.push({ id:p.key, ...p.val() }));
-    posts.sort((a,b)=>b.timestamp - a.timestamp);
-    if(posts.length===0){ container.innerHTML = "<div class='alert alert-secondary'>لا توجد منشورات في هذا النشاط بعد. أضف منشوراً!</div>"; return; }
-    let html = "";
-    for(let p of posts) html += await renderPostCard(p, p.id, true, true);
-    container.innerHTML = html;
-    attachPostEvents(true, actId);
+    if(activityPostsListener) activityPostsListener.off();
+    activityPostsListener = db.ref(`activities/${actId}/posts`).orderByChild("timestamp").on("value", async (snap) => {
+      let posts = [];
+      snap.forEach(p=>posts.push({ id:p.key, ...p.val() }));
+      posts.sort((a,b)=>b.timestamp - a.timestamp);
+      if(posts.length===0){ container.innerHTML = "<div class='alert alert-secondary'>لا توجد منشورات في هذا النشاط بعد. أضف منشوراً!</div>"; return; }
+      let html = "";
+      for(let p of posts) html += renderPostCard(p, p.id, true, actId);
+      container.innerHTML = html;
+      attachPostEvents(true, actId);
+    });
   }
 
   function attachPostEvents(isActivity=false, actId=""){
@@ -269,6 +280,7 @@
         let snap = await ref.once("value");
         if(snap.exists()) ref.remove();
         else ref.set(true);
+        // تحديث الواجهة
         if(isActivity) loadActivityPosts(actId);
         else loadGeneralPosts();
       };
@@ -303,7 +315,7 @@
     });
   }
 
-  // حذف المنشور (للمدير)
+  // حذف المنشور
   window.deletePost = async (postId, isActivity, actId)=>{
     if(!isAdmin) return;
     if(confirm("حذف المنشور نهائياً؟")){
@@ -314,13 +326,13 @@
       else loadGeneralPosts();
     }
   };
-  window.deleteComment = async (postId, commentId)=>{
+  window.deleteComment = async (postId, commentId, isActivity, actId)=>{
     if(!isAdmin) return;
-    let commentsRef = currentActivityId ? db.ref(`activities/${currentActivityId}/posts/${postId}/comments`) : db.ref(`posts/${postId}/comments`);
-    let snap = await commentsRef.once("value");
+    let refPath = isActivity ? db.ref(`activities/${actId}/posts/${postId}/comments`) : db.ref(`posts/${postId}/comments`);
+    let snap = await refPath.once("value");
     snap.forEach(c=>{ if(c.val().id === commentId) c.ref.remove(); });
     toast("تم حذف التعليق");
-    if(currentActivityId) loadActivityPosts(currentActivityId);
+    if(isActivity) loadActivityPosts(actId);
     else loadGeneralPosts();
   };
 
@@ -346,7 +358,6 @@
       if(name){
         let newRef = db.ref("activities_list").push();
         await newRef.set({ name, description: desc, timestamp: Date.now() });
-        // تحديث عدد الأنشطة في الإحصائيات
         let countSnap = await db.ref("activities_list").once("value");
         await db.ref("school_stats/activitiesCount").set(countSnap.numChildren());
         loadActivitiesList();
@@ -370,7 +381,7 @@
     loadActivityPosts(actId);
   }
 
-  // ==================== نموذج إنشاء منشور (للمدير) ====================
+  // نموذج إنشاء منشور للمدير
   window.showCreatePostModal = async (type, activityId=null) => {
     if(!isAdmin) return toast("خاص بالإدارة","warning");
     Swal.fire({
@@ -396,14 +407,17 @@
         else if(type === "activity") await db.ref(`activities/${activityId}/posts`).push(post);
         toast("تم النشر");
         if(type==="general") loadGeneralPosts();
-        else viewActivity(activityId, (await db.ref(`activities_list/${activityId}`).once("value")).val().name); // إعادة تحميل النشاط
+        else {
+          let actName = (await db.ref(`activities_list/${activityId}`).once("value")).val().name;
+          viewActivity(activityId, actName);
+        }
       }
     });
   };
 
-  // ==================== شئون الطلاب (نتائج + رفع JSON) ====================
+  // ==================== شئون الطلاب (نتائج) ====================
   async function loadStudentsSection(){
-    let html = `<h4><i class="fas fa-graduation-cap"></i> استعلام النتائج</h4><div class="row g-2"><div class="col-md-6"><select id="gradeSelect" class="form-select"><option value="p6">السادس الابتدائي</option><option value="p5">الخامس</option><option value="p4">الرابع</option><option value="p3">الثالث</option></select></div><div class="col-md-6"><input id="seatNum" class="form-control" placeholder="رقم الجلوس"></div></div><button class="btn-gold mt-3 w-100" onclick="searchResult()">استعلام</button><div id="resultCard" class="mt-4"></div>${isAdmin ? `<hr><h6>رفع نتائج JSON</h6><input type="file" id="jsonFile" accept=".json" class="form-control"><button class="btn btn-sm btn-secondary mt-2" onclick="uploadResults()">رفع</button><div id="jsonMsg"></div>` : ""}</div>`;
+    let html = `<h4><i class="fas fa-graduation-cap"></i> استعلام النتائج</h4><div class="row g-2"><div class="col-md-6"><select id="gradeSelect" class="form-select"><option value="p6">السادس الابتدائي</option><option value="p5">الخامس</option><option value="p4">الرابع</option><option value="p3">الثالث</option></select></div><div class="col-md-6"><input id="seatNum" class="form-control" placeholder="رقم الجلوس"></div></div><button class="btn-gold mt-3 w-100" onclick="searchResult()">استعلام</button><div id="resultCard" class="mt-4"></div>${isAdmin ? `<hr><h6>رفع نتائج JSON</h6><input type="file" id="jsonFile" accept=".json" class="form-control"><button class="btn btn-sm btn-secondary mt-2" onclick="uploadResults()">رفع</button>` : ""}</div>`;
     document.getElementById("dynamicContent").innerHTML = html;
   }
   window.searchResult = async () => {
@@ -420,6 +434,8 @@
   // ==================== التنقل ولوحة الإدارة ====================
   window.loadSection = (section) => {
     currentSection = section;
+    if(postsListener) postsListener.off();
+    if(activityPostsListener) activityPostsListener.off();
     if(section === "home") loadGeneralPosts();
     else if(section === "posts") loadGeneralPosts();
     else if(section === "students") loadStudentsSection();
