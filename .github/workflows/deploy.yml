@@ -1,0 +1,97 @@
+# ============================================================
+#  🚀 GitHub Actions — نشر تلقائي آمن لمشروع المدرسة
+#  ☁️ دعم Firebase + Cloudinary + كلمة سر الإدارة المشفرة
+# ============================================================
+
+name: Deploy School Portal
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+# تعيين الأذونات اللازمة للنشر على GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# منع تنفيذ متعدد في نفس الوقت
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # ========== 1. فحص أولي ==========
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: التأكد من وجود index.html
+        run: |
+          if [ ! -f "index.html" ]; then
+            echo "❌ index.html غير موجود"
+            exit 1
+          fi
+          echo "✅ index.html موجود"
+
+  # ========== 2. بناء وحقن الأسرار ==========
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: validate
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: تحميل الكود
+        uses: actions/checkout@v4
+
+      - name: حقن متغيرات Firebase
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+        run: |
+          sed -i "s|%%FIREBASE_API_KEY%%|${FIREBASE_API_KEY}|g" index.html
+          sed -i "s|%%FIREBASE_AUTH_DOMAIN%%|${FIREBASE_AUTH_DOMAIN}|g" index.html
+          sed -i "s|%%FIREBASE_DATABASE_URL%%|${FIREBASE_DATABASE_URL}|g" index.html
+          sed -i "s|%%FIREBASE_PROJECT_ID%%|${FIREBASE_PROJECT_ID}|g" index.html
+          sed -i "s|%%FIREBASE_STORAGE_BUCKET%%|${FIREBASE_STORAGE_BUCKET}|g" index.html
+          sed -i "s|%%FIREBASE_MESSAGING_SENDER_ID%%|${FIREBASE_MESSAGING_SENDER_ID}|g" index.html
+          sed -i "s|%%FIREBASE_APP_ID%%|${FIREBASE_APP_ID}|g" index.html
+          echo "✅ Firebase config injected"
+
+      - name: حقن كلمة سر الإدارة
+        env:
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET_KEY }}
+        run: |
+          sed -i "s|%%ADMIN_SECRET_KEY%%|${ADMIN_SECRET}|g" index.html
+          echo "✅ Admin secret injected"
+
+      - name: حقن إعدادات Cloudinary
+        env:
+          CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          UPLOAD_PRESET: ${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
+        run: |
+          sed -i "s|const CLOUD_NAME = \".*\"|const CLOUD_NAME = \"${CLOUD_NAME}\"|g" index.html
+          sed -i "s|const UPLOAD_PRESET = \".*\"|const UPLOAD_PRESET = \"${UPLOAD_PRESET}\"|g" index.html
+          echo "✅ Cloudinary settings injected"
+
+      - name: إضافة تاريخ آخر تحديث
+        run: |
+          DATE=$(TZ='Africa/Cairo' date '+%Y-%m-%d %H:%M')
+          sed -i "s|جميع الحقوق محفوظة|جميع الحقوق محفوظة — تحديث: ${DATE}|g" index.html
+
+      - name: إعداد Pages ونشر
+        uses: actions/configure-pages@v4
+      - name: رفع الأرتيفاكت
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: النشر
+        id: deployment
+        uses: actions/deploy-pages@v4
