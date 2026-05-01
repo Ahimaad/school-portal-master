@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2b4e">
+  <title>منصة سعد بن أبي وقاص | المتكاملة</title>
+  <!-- Preconnect & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Bootstrap + Icons + Swiper -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+    :root { --primary: #0a2b4e; --gold: #d4af37; --gold-light: #f8edb7; --shadow: 0 8px 20px rgba(0,0,0,0.05); }
+    body { background: #f0f4f9; color: #1e2f3e; }
+    body.dark { background: #0f1725; color: #e2e8f0; }
+    body.dark .card, body.dark .glass-card, body.dark .post-card { background: #1a253c !important; }
+    .header-gold { background: linear-gradient(135deg, var(--primary), #071a2c); border-bottom: 3px solid var(--gold); position: sticky; top:0; z-index:1000; }
+    .school-logo { width: 60px; height:60px; border-radius:50%; border:2px solid var(--gold); background:white; }
+    .ticker-container { background: #0a1f33; color:white; padding:6px 0; white-space: nowrap; overflow: hidden; }
+    .ticker-track { display: inline-block; animation: ticker 35s linear infinite; }
+    .ticker-item { display: inline-block; padding:0 30px; }
+    @keyframes ticker { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+    .glass-card { background: white; border-radius: 24px; padding:20px; box-shadow: var(--shadow); margin-bottom:20px; }
+    .nav-btn { width:100%; background:none; border:none; text-align:right; padding:12px 15px; border-radius:16px; font-weight:700; transition:0.3s; border-right:4px solid var(--gold); margin-bottom:8px; }
+    .nav-btn:hover, .nav-btn.active { background: var(--primary); color:white; transform: translateX(-5px); }
+    .post-card { background: white; border-radius: 24px; padding:20px; margin-bottom:25px; box-shadow: var(--shadow); }
+    .post-avatar { width:48px; height:48px; border-radius:50%; background: linear-gradient(145deg, var(--gold), #b8860b); display: flex; align-items:center; justify-content:center; color:white; }
+    .media-wrapper { margin:15px 0; border-radius:20px; overflow:hidden; }
+    .media-wrapper img, .media-wrapper video, .media-wrapper iframe { width:100%; max-height:350px; object-fit:cover; }
+    .assignment-card { background: #fef9e6; border-right:6px solid var(--gold); padding:15px; border-radius:20px; margin-bottom:15px; }
+    .poll-option { background:white; border-radius:40px; padding:10px 15px; margin-bottom:10px; cursor:pointer; transition:0.3s; border:1px solid #ddd; }
+    .poll-option:hover { background:#f0f2f5; }
+    .poll-voted { background: var(--gold); color:white; }
+    .schedule-table th { background: var(--primary); color:white; padding:12px; text-align:center; }
+    .schedule-table td { padding:10px; text-align:center; border-bottom:1px solid #eee; }
+    .btn-gold { background: linear-gradient(135deg, var(--gold), #b8860b); color: var(--primary); font-weight:800; border:none; padding:6px 18px; border-radius:40px; transition:0.3s; }
+    .fab-th, .fab-st { position:fixed; bottom:30px; left:20px; background: var(--gold); color: var(--primary); border:none; width:50px; height:50px; border-radius:50%; z-index:900; cursor:pointer; }
+    .fab-st { left:85px; background: var(--primary); color:white; opacity:0; }
+    .fab-st.show { opacity:1; }
+    @media (max-width:768px) { .hide-mobile { display:none; } .post-avatar { width:40px; height:40px; } }
+  </style>
+</head>
+<body>
+
+<div id="loader" style="position:fixed; inset:0; background:var(--primary); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; transition:0.5s">
+  <img src="logo.jpg" style="width:80px; border-radius:50%; border:3px solid var(--gold)">
+  <div class="spinner-border text-warning mt-3"></div>
+</div>
+
+<button class="fab-th" id="darkModeToggle"><i class="fas fa-moon"></i></button>
+<button class="fab-st" id="goTop"><i class="fas fa-chevron-up"></i></button>
+
+<header class="header-gold py-2">
+  <div class="container">
+    <div class="row align-items-center text-center text-md-end">
+      <div class="col-md-auto"><img src="logo.jpg" class="school-logo" onerror="this.src='https://placehold.co/60x60?text=Logo'"></div>
+      <div class="col"><span class="badge bg-warning text-dark">إدارة الفشن التعليمية</span><h1 class="text-white fs-5 fw-bold mt-1">مدرسة سعد بن أبي وقاص الرسمية للغات</h1><p class="text-white-50 small">المنصة التعليمية المتكاملة – آمنة، ذكية، متفاعلة</p></div>
+    </div>
+  </div>
+</header>
+
+<div class="ticker-container"><div class="ticker-track" id="tickerTrack"></div></div>
+
+<div class="container my-4">
+  <div class="row g-4">
+    <div class="col-lg-3 hide-mobile">
+      <div class="glass-card">
+        <button class="nav-btn" onclick="loadSection('home')"><i class="fas fa-home ms-2"></i> الرئيسية</button>
+        <button class="nav-btn" onclick="loadSection('posts')"><i class="fas fa-newspaper ms-2"></i> الأخبار والمنشورات</button>
+        <button class="nav-btn" onclick="loadSection('students')"><i class="fas fa-user-graduate ms-2"></i> شئون الطلاب</button>
+        <button class="nav-btn" onclick="loadSection('resources')"><i class="fas fa-book ms-2"></i> الموارد التعليمية</button>
+        <button class="nav-btn" onclick="loadSection('activities')"><i class="fas fa-futbol ms-2"></i> الأنشطة والواجبات</button>
+        <button class="nav-btn" onclick="loadSection('schedule')"><i class="fas fa-calendar-week ms-2"></i> الجدول المدرسي</button>
+        <button class="nav-btn" onclick="loadSection('polls')"><i class="fas fa-poll ms-2"></i> الاستبيانات</button>
+        <button class="nav-btn" onclick="openAdminPanel()"><i class="fas fa-lock ms-2"></i> <span id="adminBtnText">لوحة الإدارة</span></button>
+      </div>
+      <div class="glass-card"><h6 class="fw-bold mb-3"><i class="fas fa-chart-line text-warning"></i> إحصائيات المدرسة</h6>
+        <div class="d-flex justify-content-between"><span>الطلاب</span><span id="statStudents">0</span></div>
+        <div class="d-flex justify-content-between mt-2"><span>المعلمون</span><span id="statTeachers">0</span></div>
+        <div class="d-flex justify-content-between mt-2"><span>الأنشطة</span><span id="statActivities">0</span></div>
+      </div>
+      <div class="glass-card"><h6 class="fw-bold mb-2"><i class="fas fa-user-circle"></i> وضع الزائر</h6>
+        <div class="alert alert-info small p-2">يمكنك التفاعل (إعجاب، تعليق، مشاركة، استعلام نتائج)</div>
+      </div>
+    </div>
+
+    <div class="col-lg-9">
+      <div class="swiper mainSlider mb-3"><div class="swiper-wrapper" id="heroSlider"></div><div class="swiper-pagination"></div></div>
+      <div id="dynamicContent"><div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-2x text-warning"></i></div></div>
+    </div>
+  </div>
+</div>
+
+<footer class="bg-dark text-white-50 py-3 text-center"><small>© 2026 منصة سعد بن أبي وقاص | برمجة الأستاذ أحمد صابر</small></footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  // ==================== CONFIG (Secrets will be injected by GitHub Actions) ====================
+  const firebaseConfig = {
+    apiKey: "%%FIREBASE_API_KEY%%",
+    authDomain: "%%FIREBASE_AUTH_DOMAIN%%",
+    databaseURL: "%%FIREBASE_DATABASE_URL%%",
+    projectId: "%%FIREBASE_PROJECT_ID%%",
+    storageBucket: "%%FIREBASE_STORAGE_BUCKET%%",
+    messagingSenderId: "%%FIREBASE_MESSAGING_SENDER_ID%%",
+    appId: "%%FIREBASE_APP_ID%%"
+  };
+  const ADMIN_SECRET = "%%ADMIN_SECRET_KEY%%";
+  const CLOUD_NAME = "dyo4ff7ha";   // تم إدخال Cloud name الخاص بك
+  const UPLOAD_PRESET = "school_raw";
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let isAdmin = false;
+  let currentSection = "home";
+  let swiperHero = null;
+
+  // Helper functions
+  function toast(msg, type = "info") { let t = document.createElement("div"); t.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-4 shadow`; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
+  function formatDate(ts) { return new Date(ts).toLocaleString("ar-EG"); }
+  function escapeHtml(s) { if (!s) return ""; return s.replace(/[&<>]/g, function (m) { if (m === "&") return "&amp;"; if (m === "<") return "&lt;"; if (m === ">") return "&gt;"; return m; }); }
+  function getYoutubeId(url) { let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/); return match ? match[1] : null; }
+
+  function generateMediaHtml(url) {
+    if (!url) return "";
+    let ytId = getYoutubeId(url);
+    if (ytId) return `<div class="media-wrapper"><iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen></iframe></div>`;
+    if (url.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i)) return `<div class="media-wrapper"><img src="${url}" onclick="openImage('${url}')"></div>`;
+    if (url.match(/\.(mp4|mov|webm)(\?|$)/i)) return `<div class="media-wrapper"><video controls src="${url}"></video></div>`;
+    if (url.match(/\.pdf(\?|$)/i)) return `<div class="media-wrapper"><iframe src="https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true"></iframe></div>`;
+    return `<div class="media-wrapper"><a href="${url}" target="_blank" class="btn btn-outline-primary w-100">فتح الرابط</a></div>`;
+  }
+
+  async function uploadFileToCloudinary(file) {
+    let fd = new FormData(); fd.append("file", file); fd.append("upload_preset", UPLOAD_PRESET);
+    let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: fd });
+    let data = await res.json(); return data.secure_url;
+  }
+
+  // ==================== STATS ====================
+  function loadStats() {
+    db.ref("school_stats").on("value", snap => {
+      let s = snap.val() || { studentsCount: 1250, teachersCount: 85, activitiesCount: 24 };
+      document.getElementById("statStudents").innerText = s.studentsCount;
+      document.getElementById("statTeachers").innerText = s.teachersCount;
+      document.getElementById("statActivities").innerText = s.activitiesCount;
+    });
+  }
+
+  // ==================== TICKER ====================
+  function loadTicker() {
+    db.ref("ticker_news").orderByChild("timestamp").once("value", snap => {
+      let arr = []; snap.forEach(c => arr.unshift(c.val().text));
+      if (arr.length === 0) arr = ["أهلاً في المنصة المتكاملة", "نتائج الامتحانات متاحة", "فعاليات الأسبوع الجديد"];
+      let track = document.getElementById("tickerTrack"); track.innerHTML = "";
+      let repeated = [...arr, ...arr];
+      repeated.forEach(t => { let span = document.createElement("span"); span.className = "ticker-item"; span.innerHTML = `<i class="fas fa-star-of-life"></i> ${t}`; track.appendChild(span); });
+    });
+  }
+
+  // ==================== POSTS (General Feed with likes/comments/share) ====================
+  async function renderPostCard(post, id) {
+    let userId = localStorage.getItem("userId") || "user_" + Math.random();
+    if (!localStorage.getItem("userId")) localStorage.setItem("userId", userId);
+    let liked = post.likes && post.likes[userId];
+    let likesCount = post.likes ? Object.keys(post.likes).length : 0;
+    let commentsHtml = "";
+    if (post.comments) {
+      Object.values(post.comments).forEach(c => {
+        commentsHtml += `<div class="comment-item mb-2"><strong>${escapeHtml(c.author)}</strong> <small class="text-muted">${c.date || ""}</small><p class="mb-0">${escapeHtml(c.text)}</p></div>`;
+      });
+    }
+    return `<div class="post-card" data-id="${id}"><div class="d-flex gap-3"><div class="post-avatar"><i class="fas fa-user"></i></div><div><div class="fw-bold">${escapeHtml(post.publisherName || "إدارة المدرسة")}</div><div class="small text-muted">${formatDate(post.timestamp)}</div></div></div><div class="mt-2">${escapeHtml(post.content)}</div>${post.mediaUrl ? generateMediaHtml(post.mediaUrl) : ""}<div class="d-flex gap-3 mt-3 text-muted small"><span><i class="fas fa-thumbs-up"></i> ${likesCount}</span><span><i class="fas fa-comment"></i> ${post.comments ? Object.keys(post.comments).length : 0}</span></div><div class="d-flex gap-2 mt-2"><button class="btn btn-sm ${liked ? 'btn-primary' : 'btn-outline-secondary'} like-btn" data-id="${id}"><i class="fas fa-thumbs-up"></i> أعجبني</button><button class="btn btn-sm btn-outline-secondary comment-toggle" data-id="${id}"><i class="fas fa-comment"></i> تعليق</button><button class="btn btn-sm btn-outline-success share-wa" data-content="${escapeHtml(post.content)}"><i class="fab fa-whatsapp"></i> مشاركة</button></div><div id="comments-${id}" class="mt-2" style="display:none"><div>${commentsHtml}</div><div class="input-group mt-2"><input type="text" class="form-control form-control-sm newComment" data-id="${id}" placeholder="اكتب تعليقاً..."><button class="btn btn-sm btn-gold submitComment" data-id="${id}">نشر</button></div></div></div>`;
+  }
+
+  async function loadMainPosts() {
+    let container = document.getElementById("dynamicContent");
+    container.innerHTML = `<div class="text-center"><i class="fas fa-spinner fa-spin"></i></div>`;
+    let snap = await db.ref("posts").orderByChild("timestamp").once("value");
+    let posts = []; snap.forEach(p => posts.push({ id: p.key, ...p.val() }));
+    posts.sort((a, b) => b.timestamp - a.timestamp);
+    let html = `<div class="d-flex justify-content-between"><h4><i class="fas fa-newspaper text-warning"></i> المنشورات</h4>${isAdmin ? `<button class="btn btn-gold btn-sm" onclick="showCreatePostModal()">+ منشور جديد</button>` : ""}</div>`;
+    for (let p of posts) html += await renderPostCard(p, p.id);
+    container.innerHTML = html;
+    attachPostEvents();
+  }
+
+  function attachPostEvents() {
+    document.querySelectorAll(".like-btn").forEach(btn => { btn.onclick = () => likePost(btn.dataset.id); });
+    document.querySelectorAll(".comment-toggle").forEach(btn => { btn.onclick = () => { let el = document.getElementById(`comments-${btn.dataset.id}`); if (el) el.style.display = el.style.display === "none" ? "block" : "none"; }; });
+    document.querySelectorAll(".submitComment").forEach(btn => { btn.onclick = () => addComment(btn.dataset.id); });
+    document.querySelectorAll(".share-wa").forEach(btn => { btn.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(btn.dataset.content)}`); });
+  }
+
+  async function likePost(postId) { let userId = localStorage.getItem("userId"); let ref = db.ref(`posts/${postId}/likes/${userId}`); let snap = await ref.once("value"); if (snap.exists()) ref.remove(); else ref.set(true); loadMainPosts(); }
+  async function addComment(postId) { let input = document.querySelector(`.newComment[data-id="${postId}"]`); let txt = input.value.trim(); if (!txt) return; let comment = { author: isAdmin ? "إدارة المدرسة" : "زائر", text: txt, date: formatDate(Date.now()) }; await db.ref(`posts/${postId}/comments`).push(comment); input.value = ""; toast("تم التعليق"); loadMainPosts(); }
+
+  // ==================== ASSIGNMENTS & ACTIVITIES ====================
+  async function loadAssignments() {
+    let snap = await db.ref("assignments").orderByChild("dueDate").once("value");
+    let assignments = []; snap.forEach(a => assignments.push({ id: a.key, ...a.val() }));
+    let html = `<h4><i class="fas fa-tasks text-warning"></i> الواجبات والأنشطة</h4>${isAdmin ? `<button class="btn btn-gold btn-sm mb-3" onclick="createAssignment()">+ إضافة واجب</button>` : ""}<div id="assignList"></div>`;
+    document.getElementById("dynamicContent").innerHTML = html;
+    let listDiv = document.getElementById("assignList");
+    if (assignments.length === 0) { listDiv.innerHTML = "<div class='alert alert-info'>لا توجد واجبات حالياً</div>"; return; }
+    listDiv.innerHTML = assignments.map(a => `
+      <div class="assignment-card"><div class="d-flex justify-content-between"><h6>📚 ${escapeHtml(a.title)}</h6><span class="badge bg-warning">تسليم: ${a.dueDate || ""}</span></div><p>${escapeHtml(a.description)}</p>${a.mediaUrl ? `<div class="small"><i class="fas fa-paperclip"></i> <a href="${a.mediaUrl}" target="_blank">ملف مرفق</a></div>` : ""}
+      <div class="submission-box mt-2" id="sub-${a.id}"><strong>تسليم الواجب</strong><div class="row g-2 mt-1"><div class="col-8"><input type="text" class="form-control form-control-sm" id="subLink-${a.id}" placeholder="رابط الحل (Google Drive, PDF, صورة)"></div><div class="col-4"><button class="btn btn-sm btn-gold w-100" onclick="submitAssignment('${a.id}')">تسليم</button></div></div><input type="file" id="subFile-${a.id}" class="form-control form-control-sm mt-2" accept=".pdf,image/*,video/*"><div id="submissions-${a.id}" class="mt-2"></div></div></div>`).join("");
+    assignments.forEach(a => loadSubmissions(a.id));
+  }
+
+  async function createAssignment() {
+    if (!isAdmin) return toast("خاص بالإدارة");
+    Swal.fire({ title: "إضافة واجب جديد", html: `<input id="assTitle" class="swal2-input" placeholder="عنوان الواجب"><textarea id="assDesc" class="swal2-textarea" placeholder="وصف الواجب"></textarea><input id="assDate" class="swal2-input" placeholder="تاريخ التسليم (مثال: 2025-05-10)"><input id="assMedia" class="swal2-input" placeholder="رابط ملف (اختياري)">`, showCancelButton: true }).then(async res => {
+      if (res.isConfirmed) { let title = document.getElementById("assTitle").value, desc = document.getElementById("assDesc").value, due = document.getElementById("assDate").value, media = document.getElementById("assMedia").value;
+        await db.ref("assignments").push({ title, description: desc, dueDate: due, mediaUrl: media, timestamp: Date.now(), submissions: {} }); toast("تم إضافة الواجب"); loadAssignments();
+      }
+    });
+  }
+
+  async function submitAssignment(assignId) {
+    let link = document.getElementById(`subLink-${assignId}`).value.trim();
+    let file = document.getElementById(`subFile-${assignId}`).files[0];
+    let mediaUrl = link;
+    if (file) { toast("جاري رفع الملف..."); mediaUrl = await uploadFileToCloudinary(file); }
+    if (!mediaUrl) { toast("أدخل رابط الحل أو ارفق ملفاً"); return; }
+    let submission = { studentId: localStorage.getItem("userId"), studentName: "طالب", solutionUrl: mediaUrl, submittedAt: Date.now(), grade: null, feedback: "" };
+    await db.ref(`assignments/${assignId}/submissions`).push(submission);
+    toast("تم تسليم الواجب"); loadSubmissions(assignId);
+  }
+
+  async function loadSubmissions(assignId) {
+    let snap = await db.ref(`assignments/${assignId}/submissions`).once("value");
+    let subs = []; snap.forEach(s => subs.push(s.val()));
+    let container = document.getElementById(`submissions-${assignId}`);
+    if (subs.length === 0) { container.innerHTML = "<div class='small text-muted'>لا توجد تسليمات بعد</div>"; return; }
+    container.innerHTML = subs.map(s => `<div class="small border-top pt-1 mt-1"><strong>طالب:</strong> <a href="${s.solutionUrl}" target="_blank">عرض الحل</a> ${s.grade ? `<span class="badge bg-success">درجة: ${s.grade}</span>` : `<button class="btn btn-sm btn-outline-primary" onclick="gradeSubmission('${assignId}','${s.studentId}')">تقييم</button>`}</div>`).join("");
+  }
+
+  window.gradeSubmission = async (assignId, studentId) => {
+    if (!isAdmin) return toast("الإدارة فقط");
+    let grade = prompt("أدخل درجة الطالب (من 100)");
+    if (grade) { let snap = await db.ref(`assignments/${assignId}/submissions`).once("value"); snap.forEach(s => { if (s.val().studentId === studentId) s.ref.update({ grade: parseInt(grade), feedback: "مقبول" }); }); toast("تم التقييم"); loadSubmissions(assignId); }
+  };
+
+  // ==================== POLLS (VOTING) ====================
+  async function loadPolls() {
+    let snap = await db.ref("polls").once("value");
+    let polls = []; snap.forEach(p => polls.push({ id: p.key, ...p.val() }));
+    let html = `<h4><i class="fas fa-poll text-warning"></i> الاستبيانات</h4>${isAdmin ? `<button class="btn btn-gold btn-sm mb-3" onclick="createPoll()">+ استبيان جديد</button>` : ""}`;
+    for (let poll of polls) {
+      let totalVotes = poll.options ? Object.values(poll.options).reduce((a, b) => a + b.votes, 0) : 0;
+      let voted = localStorage.getItem(`poll_${poll.id}`) === "true";
+      html += `<div class="card p-3 mb-3"><h6>📊 ${escapeHtml(poll.question)}</h6>`;
+      if (poll.options) {
+        for (let [optKey, opt] of Object.entries(poll.options)) {
+          let percent = totalVotes ? (opt.votes / totalVotes * 100).toFixed(1) : 0;
+          html += `<div class="poll-option mb-2 p-2 border rounded" onclick="${!voted && !isAdmin ? `votePoll('${poll.id}','${optKey}')` : ''}"><div class="d-flex justify-content-between"><span>${escapeHtml(opt.text)}</span><span>${opt.votes} صوت (${percent}%)</span></div><div class="progress mt-1" style="height:6px"><div class="progress-bar bg-warning" style="width:${percent}%"></div></div></div>`;
+        }
+      }
+      if (voted) html += `<div class="small text-muted mt-2">✔️ تم التصويت مسبقاً</div>`;
+      if (isAdmin) html += `<button class="btn btn-sm btn-danger mt-2" onclick="deletePoll('${poll.id}')">حذف الاستبيان</button>`;
+      html += `</div>`;
+    }
+    document.getElementById("dynamicContent").innerHTML = html;
+  }
+  window.votePoll = async (pollId, optionKey) => {
+    if (localStorage.getItem(`poll_${pollId}`) === "true") { toast("لقد صوّت مسبقاً"); return; }
+    let ref = db.ref(`polls/${pollId}/options/${optionKey}/votes`);
+    let snap = await ref.once("value"); let current = snap.val() || 0;
+    await ref.set(current + 1); localStorage.setItem(`poll_${pollId}`, "true"); toast("تم تسجيل صوتك"); loadPolls();
+  };
+  window.createPoll = async () => {
+    if (!isAdmin) return;
+    Swal.fire({ title: "استبيان جديد", html: `<input id="pollQ" class="swal2-input" placeholder="السؤال"><div id="pollOpts"><input class="swal2-input mt-1" placeholder="خيار 1"><input class="swal2-input mt-1" placeholder="خيار 2"></div><button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addPollOption()">+ إضافة خيار</button>`, showCancelButton: true }).then(async res => {
+      if (res.isConfirmed) { let question = document.getElementById("pollQ").value; let options = {}; document.querySelectorAll("#pollOpts input").forEach((inp, idx) => { if (inp.value.trim()) options[`opt${idx}`] = { text: inp.value.trim(), votes: 0 }; }); await db.ref("polls").push({ question, options, timestamp: Date.now() }); toast("تم إنشاء الاستبيان"); loadPolls(); }
+    });
+  };
+  window.addPollOption = () => { let div = document.getElementById("pollOpts"); let inp = document.createElement("input"); inp.className = "swal2-input mt-1"; inp.placeholder = "خيار جديد"; div.appendChild(inp); };
+  window.deletePoll = async (id) => { if (isAdmin) { await db.ref(`polls/${id}`).remove(); toast("تم الحذف"); loadPolls(); } };
+
+  // ==================== SCHEDULE ====================
+  async function loadSchedule() {
+    let snap = await db.ref("schedule").once("value");
+    let data = snap.val() || {};
+    let days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+    let periods = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة"];
+    let html = `<h4><i class="fas fa-calendar-alt text-warning"></i> الجدول المدرسي ${isAdmin ? `<button class="btn btn-gold btn-sm" onclick="editSchedule()">تعديل الجدول</button>` : ""}</h4><div class="table-responsive"><table class="schedule-table table table-bordered"><thead><tr><th>اليوم / الفترة</th>${periods.map(p => `<th>${p}</th>`).join("")}</tr></thead><tbody>`;
+    for (let day of days) {
+      html += `<tr><td class="fw-bold">${day}</td>`;
+      for (let p of periods) html += `<td>${escapeHtml(data[day]?.[p] || "-")}</td>`;
+      html += `</tr>`;
+    }
+    html += `</tbody></table></div>`;
+    document.getElementById("dynamicContent").innerHTML = html;
+  }
+  window.editSchedule = async () => {
+    if (!isAdmin) return;
+    let snap = await db.ref("schedule").once("value");
+    let current = snap.val() || {};
+    let days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+    let periods = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة"];
+    let html = `<div class="bg-white p-3 rounded"><h6>تعديل الجدول</h6>`;
+    for (let day of days) {
+      html += `<div class="mt-3"><strong>${day}</strong><div class="row g-2">`;
+      for (let p of periods) html += `<div class="col-2"><input class="form-control form-control-sm" id="${day}_${p}" placeholder="${p}" value="${escapeHtml(current[day]?.[p] || "")}"></div>`;
+      html += `</div></div>`;
+    }
+    html += `<button class="btn btn-gold mt-3" onclick="saveSchedule()">حفظ الجدول</button></div>`;
+    document.getElementById("dynamicContent").innerHTML = html;
+  };
+  window.saveSchedule = async () => {
+    let days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+    let periods = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة"];
+    let newSchedule = {};
+    for (let day of days) { newSchedule[day] = {}; for (let p of periods) newSchedule[day][p] = document.getElementById(`${day}_${p}`).value.trim(); }
+    await db.ref("schedule").set(newSchedule); toast("تم حفظ الجدول"); loadSchedule();
+  };
+
+  // ==================== STUDENTS (Results + JSON upload) ====================
+  async function loadStudentsSection() {
+    let html = `<h4><i class="fas fa-graduation-cap"></i> استعلام النتائج</h4><div class="row g-2"><div class="col-md-6"><select id="gradeSelect" class="form-select"><option value="p6">السادس الابتدائي</option><option value="p5">الخامس</option><option value="p4">الرابع</option><option value="p3">الثالث</option></select></div><div class="col-md-6"><input id="seatNum" class="form-control" placeholder="رقم الجلوس"></div></div><button class="btn-gold mt-3 w-100" onclick="searchResult()">استعلام</button><div id="resultCard" class="mt-4"></div>${isAdmin ? `<hr><h6>رفع نتائج JSON</h6><input type="file" id="jsonFile" class="form-control"><button class="btn btn-sm btn-secondary mt-2" onclick="uploadResults()">رفع</button>` : ""}</div>`;
+    document.getElementById("dynamicContent").innerHTML = html;
+  }
+  window.searchResult = async () => { let grade = document.getElementById("gradeSelect").value, seat = document.getElementById("seatNum").value; if (!seat) return; let snap = await db.ref(`results/${grade}/${seat}`).once("value"); let data = snap.val(); if (!data) { document.getElementById("resultCard").innerHTML = "<div class='alert alert-danger'>النتيجة غير موجودة</div>"; return; } let subjectsHtml = ""; for (let [sub, score] of Object.entries(data.subjects || {})) subjectsHtml += `<div class="d-flex justify-content-between"><span>${sub}</span><strong>${score}</strong></div>`; document.getElementById("resultCard").innerHTML = `<div class="result-certificate p-3 border border-warning rounded"><h4>${data.name}</h4><hr>${subjectsHtml}<hr><div>المجموع: ${data.total} | النسبة: ${data.percentage}% | التقدير: ${data.grade}</div><div class="d-flex gap-2 mt-3"><button class="btn btn-gold" onclick="printCertificate(this)">طباعة PDF</button><button class="btn btn-success" onclick="shareWhatsApp('${data.name}',${data.total})">مشاركة</button></div></div>`; };
+  window.printCertificate = async (btn) => { let element = btn.closest(".result-certificate"); let canvas = await html2canvas(element, { scale: 2 }); let imgData = canvas.toDataURL('image/png'); let { jsPDF } = window.jspdf; let pdf = new jsPDF('p', 'mm', 'a4'); let imgWidth = 190; let imgHeight = canvas.height * imgWidth / canvas.width; pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight); pdf.save('certificate.pdf'); toast("تم تحميل الشهادة"); };
+  window.shareWhatsApp = (name, total) => window.open(`https://wa.me/?text=${encodeURIComponent(`نتيجة الطالب ${name}: ${total} درجة`)}`);
+  window.uploadResults = () => { if (!isAdmin) return; let file = document.getElementById("jsonFile").files[0]; if (!file) return; let reader = new FileReader(); reader.onload = e => { let data = JSON.parse(e.target.result); let updates = {}; for (let grade in data) for (let seat in data[grade]) updates[`results/${grade}/${seat}`] = data[grade][seat]; db.ref().update(updates).then(() => toast("تم رفع النتائج")); }; reader.readAsText(file); };
+
+  // ==================== EDUCATIONAL RESOURCES (per grade) ====================
+  async function loadResources() {
+    let grades = ["p3", "p4", "p5", "p6", "m1", "m2", "m3"];
+    let gradeNames = { p3: "الثالث", p4: "الرابع", p5: "الخامس", p6: "السادس", m1: "الأول إعدادي", m2: "الثاني إعدادي", m3: "الثالث إعدادي" };
+    let html = `<h4><i class="fas fa-book text-warning"></i> الموارد التعليمية (حسب الصف)</h4><div class="mb-2">`;
+    for (let g of grades) html += `<button class="btn btn-sm btn-outline-primary mx-1 gradeTab" data-grade="${g}">${gradeNames[g]}</button>`;
+    html += `</div><div id="gradeContent"></div>`;
+    document.getElementById("dynamicContent").innerHTML = html;
+    document.querySelectorAll(".gradeTab").forEach(btn => btn.onclick = () => loadGradePosts(btn.dataset.grade));
+    loadGradePosts(grades[0]);
+  }
+
+  async function loadGradePosts(grade) {
+    let container = document.getElementById("gradeContent");
+    container.innerHTML = "<div class='text-center'><i class='fas fa-spinner fa-spin'></i></div>";
+    let snap = await db.ref(`educational_resources/${grade}/posts`).once("value");
+    let posts = []; snap.forEach(p => posts.push({ id: p.key, ...p.val() }));
+    posts.sort((a, b) => b.timestamp - a.timestamp);
+    let html = `<div class="d-flex justify-content-between"><h5>الصف: ${grade}</h5>${isAdmin ? `<button class="btn btn-gold btn-sm" onclick="addResourcePost('${grade}')">+ إضافة منشور</button>` : ""}</div>`;
+    if (posts.length === 0) html += "<div class='alert alert-secondary mt-2'>لا توجد موارد بعد</div>";
+    else for (let p of posts) html += `<div class="border-bottom pb-2 mb-2"><strong>${escapeHtml(p.publisherName || "معلم")}</strong><br>${escapeHtml(p.content)}${p.mediaUrl ? generateMediaHtml(p.mediaUrl) : ""}</div>`;
+    container.innerHTML = html;
+  }
+
+  window.addResourcePost = async (grade) => { if (!isAdmin) return; let content = prompt("محتوى المنشور:"); if (content) await db.ref(`educational_resources/${grade}/posts`).push({ content, publisherName: "معلم", timestamp: Date.now(), comments: {}, likes: {} }); loadGradePosts(grade); };
+
+  // ==================== ACTIVITIES ALIAS (assignments) ====================
+  async function loadActivitiesSection() { loadAssignments(); }
+
+  // ==================== CREATE POST MODAL (ADMIN ONLY) ====================
+  window.showCreatePostModal = async () => {
+    if (!isAdmin) return toast("خاص بالإدارة");
+    Swal.fire({ title: "منشور جديد", html: `<textarea id="postContent" class="swal2-textarea" placeholder="محتوى المنشور"></textarea><input id="postMedia" class="swal2-input" placeholder="رابط ميديا (يوتيوب، صورة...)"><input type="file" id="postFile" accept="image/*,video/*">`, showCancelButton: true }).then(async res => {
+      if (res.isConfirmed) { let content = document.getElementById("postContent").value; let media = document.getElementById("postMedia").value; let file = document.getElementById("postFile").files[0]; if (file) { toast("جاري الرفع"); media = await uploadFileToCloudinary(file); } await db.ref("posts").push({ content, mediaUrl: media, publisherName: "إدارة المدرسة", timestamp: Date.now(), likes: {}, comments: {} }); toast("تم النشر"); loadMainPosts(); }
+    });
+  };
+
+  // ==================== NAVIGATION / ADMIN ====================
+  window.loadSection = async (section) => {
+    currentSection = section;
+    if (section === "home") loadMainPosts();
+    else if (section === "posts") loadMainPosts();
+    else if (section === "students") loadStudentsSection();
+    else if (section === "resources") loadResources();
+    else if (section === "activities") loadActivitiesSection();
+    else if (section === "schedule") loadSchedule();
+    else if (section === "polls") loadPolls();
+  };
+
+  window.openAdminPanel = () => {
+    if (isAdmin) { isAdmin = false; document.getElementById("adminBtnText").innerText = "لوحة الإدارة"; toast("تم تسجيل الخروج"); loadSection(currentSection); return; }
+    Swal.fire({ title: "دخول الإدارة", input: "password", showCancelButton: true }).then(res => { if (res.isConfirmed && btoa(res.value) === ADMIN_SECRET) { isAdmin = true; document.getElementById("adminBtnText").innerText = "تسجيل الخروج"; toast("مرحباً مدير المدرسة"); loadSection(currentSection); } else toast("كلمة سر خاطئة", "error"); });
+  };
+
+  // ==================== HERO SLIDER ====================
+  async function loadHeroSlider() {
+    let slides = [{ url: "https://picsum.photos/id/20/1200/300", cap: "منصتنا الذكية" }, { url: "https://picsum.photos/id/100/1200/300", cap: "طلابنا مستقبلنا" }, { url: "https://picsum.photos/id/180/1200/300", cap: "إبداع وتكنولوجيا" }];
+    document.getElementById("heroSlider").innerHTML = slides.map(s => `<div class="swiper-slide"><img src="${s.url}" style="height:180px;width:100%;object-fit:cover;border-radius:20px"></div>`).join("");
+    swiperHero = new Swiper(".mainSlider", { loop: true, autoplay: { delay: 4000 }, pagination: { el: ".swiper-pagination" } });
+  }
+
+  // ==================== INIT ====================
+  function init() {
+    loadStats(); loadTicker(); loadMainPosts(); loadHeroSlider();
+    document.getElementById("goTop").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+    window.onscroll = () => document.getElementById("goTop").classList.toggle("show", window.scrollY > 300);
+    document.getElementById("darkModeToggle").onclick = () => { document.body.classList.toggle("dark"); localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light"); };
+    setTimeout(() => { let loader = document.getElementById("loader"); if (loader) loader.style.opacity = "0"; setTimeout(() => loader?.remove(), 500); }, 800);
+  }
+  init();
+</script>
+</body>
+</html>
